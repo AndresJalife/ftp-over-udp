@@ -1,15 +1,3 @@
-# python download -h
-
-# usage : download [ - h ] [ - v | -q ] [ - H ADDR ] [ - p PORT ] [ - d FILEPATH ] [ - n FILENAME ]
-# < command description >
-# optional arguments :
-# -h , -- help show this help message and exit
-# -v , -- verbose increase output verbosity
-# -q , -- quiet decrease output verbosity
-# -H , -- host server IP address
-# -p , -- port server port
-# -d , -- dst destination file path
-# -n , -- name file name
 import click
 
 @click.command()
