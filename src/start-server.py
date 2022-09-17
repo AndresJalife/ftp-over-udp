@@ -1,4 +1,5 @@
 import click
+from lib.tcp_lite import TcpLiteSocket
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
@@ -9,7 +10,9 @@ import click
 
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
-    click.echo(f"Hello {storage}!")
+    server = TcpLiteSocket(('127.0.0.1', 10563))
+    for sock in server.listen():
+        sock.send(b'Hola!')
 
 if __name__ == '__main__':
     main()
