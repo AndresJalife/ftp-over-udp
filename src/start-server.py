@@ -13,6 +13,8 @@ def main(verbose, quiet, host, port, storage):
     server = TcpLiteSocket(('127.0.0.1', 10563))
     for sock in server.listen():
         sock.send(b'Hola!')
+        sock.send(b'Como')
+        sock.send(b'Estas')
 
 if __name__ == '__main__':
     main()

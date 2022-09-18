@@ -13,10 +13,9 @@ def main(verbose, quiet, host, port, src, name):
     socket = TcpLiteSocket(('127.0.0.1', 10563))
     if not socket.connect():
         return
-    data, addr = socket.try_receive()
-    while (data, addr) == (None, None):
-        data, addr = socket.try_receive()
-    print(data.decode('ascii'))
+    while True:
+        data = socket.receive()
+        print(data.decode('ascii'))
 
 if __name__ == '__main__':
     main()
