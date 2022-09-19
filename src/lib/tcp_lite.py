@@ -5,6 +5,7 @@ import time
 import collections
 from threading import Thread
 
+
 class Packet:
     """TcpLite Protocol packet"""
     HEADER_FORMAT = '??IIIII'
@@ -19,6 +20,7 @@ class Packet:
         self.dead = dead
 
     def is_ack(self):
+        """Return if the pack is an ACK packet"""
         return self.ack_number != 0
 
     def __bytes__(self):
@@ -118,6 +120,7 @@ class TcpLiteSocket:
         return self._get_packet_from_book(self.ack_book, addr, timeout)
 
     def receive_from(self, addr):
+        """Receives a piece of data from a set of packets. Blocks the current thread."""
         first = self._get_packet_from(addr)
         curr = 1
         total = first.total_packets
@@ -178,6 +181,7 @@ class TcpLiteSocket:
             self.send_queue.append((packet_to_send, addr, True))
 
     def _send_stop_and_wait(self, packet_to_send, addr, wait_for_ack):
+        """Sends a packet using the stop and wait algorithm"""
         packet_bytes = bytes(packet_to_send)
         self._log(f"Sending packet {packet_to_send.index_number + 1}/{packet_to_send.total_packets} of size {len(packet_bytes)} with payload {len(packet_to_send.data)} to {addr}")
 
@@ -203,15 +207,18 @@ class TcpLiteSocket:
             self._log(f'Successfully sent packet {packet_to_send.sequence_number}/{packet_to_send.total_packets} and received ACK')
 
     def _shutdown(self):
+        """Shuts down the socket"""
         self.should_die = True
         self.socket.shutdown(socket.SHUT_RDWR)
 
     def _log(self, *args):
+        """Log the args to STDOUT"""
         if self.verbosity_level > 0:
             return print(*args)
 
 
 class TcpLiteServer(TcpLiteSocket):
+    """A server socket that listens for incoming connections"""
 
     def listen(self):
         """Listens on the specified address for incoming TcpLite connections"""
@@ -230,12 +237,14 @@ class TcpLiteServer(TcpLiteSocket):
             yield lite_socket
 
     def shutdown(self):
+        """Shutdown the server and signal all clients"""
         for addr in self.address_book.keys():
             self.send_to(addr, bytes(Packet(dead=True)))
         self._shutdown()
 
 
 class TcpLiteClient(TcpLiteSocket):
+    """A client that can connect to server sockets"""
 
     def send(self, bytes_to_send):
         """Sends a packet to the server connected to"""
@@ -263,18 +272,22 @@ class TcpLiteClient(TcpLiteSocket):
         return self.receive_from(self.server_addr)
 
     def shutdown(self):
+        """Shutdowns the client and signals the server"""
         self.send_to(self.server_addr, bytes(Packet(dead=True)))
         self._shutdown()
 
 
 class TcpLiteConnection:
+    """Facade for a server child socket"""
 
     def __init__(self, parent, addr):
         self.parent = parent
         self.addr = addr
 
     def send(self, bytes_to_send):
+        """Send a message to the connection"""
         self.parent.send_to(self.addr, bytes_to_send)
 
     def receive(self):
+        """Receive data from the connection"""
         return self.parent.receive_from(self.addr)
