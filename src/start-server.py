@@ -1,5 +1,6 @@
 import click
-from lib.tcp_lite import TcpLiteSocket
+import random
+from lib.tcp_lite import TcpLiteServer
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
@@ -10,11 +11,13 @@ from lib.tcp_lite import TcpLiteSocket
 
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
-    server = TcpLiteSocket(('127.0.0.1', 10563))
+    server = TcpLiteServer(('127.0.0.1', 10563))
     for sock in server.listen():
-        sock.send(b'Hola!')
-        sock.send(b'Como')
-        sock.send(b'Estas')
+        string = ''
+        for i in range(10):
+            sock.send((string + random.choice('abcdefghijklpqrtsxyz')).encode('ASCII'))
+            string = sock.receive().decode('ASCII')
+            print(f'Received {string}')
 
 if __name__ == '__main__':
     main()

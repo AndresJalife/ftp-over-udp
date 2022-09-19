@@ -1,5 +1,6 @@
 import click
-from lib.tcp_lite import TcpLiteSocket
+from lib.tcp_lite import TcpLiteClient
+import random
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
@@ -10,12 +11,15 @@ from lib.tcp_lite import TcpLiteSocket
 @click.option('-n', '--name', default=1, help='file name')
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteSocket(('127.0.0.1', 10563))
+    socket = TcpLiteClient(('127.0.0.1', 10563))
     if not socket.connect():
         return
     while True:
-        data = socket.receive()
-        print(data.decode('ascii'))
+        string = None
+        for i in range(10):
+            string = socket.receive().decode('ascii')
+            print(f'Received {string}')
+            socket.send((string + random.choice('ABCDEFGHIJKLPQRSTXYZ')).encode('ASCII'))
 
 if __name__ == '__main__':
     main()
