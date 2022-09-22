@@ -210,6 +210,7 @@ class TcpLiteSocket:
             self._log(f'Successfully sent packet {packet_to_send.sequence_number}/{packet_to_send.total_packets} and received ACK')
 
     def _send_without_ack(self, packet, addr):
+        self.is_ready = True
         self.socket.sendto(bytes(packet), addr)
 
     def _send_go_back_n(self, packets_to_send, addr, wait_for_ack):
