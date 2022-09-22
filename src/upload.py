@@ -11,7 +11,7 @@ import random
 @click.option('-n', '--name', default=1, help='file name')
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient(('127.0.0.1', 10563))
+    socket = TcpLiteClient(('127.0.0.1', 10563), ack_type=TcpLiteClient.GO_BACK_N)
     if not socket.connect():
         return
     while True:

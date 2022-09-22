@@ -64,6 +64,7 @@ class TcpLiteSocket:
     DATA_PAYLOAD_SIZE = PACKET_SIZE - len(bytes(Packet()))
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
     GO_BACK_N = SendMethod.GO_BACK_N
+    WINDOW_SIZE = 3
 
     def __init__(self, addr, ack_type=STOP_AND_WAIT):
         self.server_addr = addr
@@ -219,19 +220,22 @@ class TcpLiteSocket:
         next_packet = 0
         waiting_packets = collections.deque([])
         while ack_count < len(packets_to_send):
-            if len(waiting_packets) < TcpLiteSocket.WINDOW_SIZE:
+            if len(waiting_packets) < TcpLiteSocket.WINDOW_SIZE and next_packet < len(packets_to_send):
+                print(next_packet)
+                print(packets_to_send)
                 packet_to_send = packets_to_send[next_packet]
                 packet_bytes = bytes(packet_to_send)
                 self._log(
                     f"Sending packet {packet_to_send.index_number + 1}/{packet_to_send.total_packets} of size {len(packet_bytes)} with payload {len(packet_to_send.data)} to {addr}")
                 self.socket.sendto(packet_bytes, addr)
                 next_packet += 1
-                waiting_packets.append({sequence_number: packet_to_send.sequence_number, start_time: time.time()})
+                waiting_packets.append({"sequence_number": packet_to_send.sequence_number, "start_time": time.time()})
             #     # if not wait_for_ack:
             #     #     success = True
             #     #     break
 
-            if waiting_packets[0].start_time + TcpLiteSocket.ACK_TIMEOUT < time.time():
+            if waiting_packets[0]["start_time"] + TcpLiteSocket.ACK_TIMEOUT < time.time():
+                print("asd")
                 # resend packets
                 ack_timeout_retries += 1
                 if ack_timeout_retries >= TcpLiteSocket.ACK_RETRIES:
@@ -245,7 +249,7 @@ class TcpLiteSocket:
                 ack_packet = queue.popleft()
                 if not ack_packet:
                     continue
-                if ack_packet.ack_number == waiting_packets[0].sequence_number:
+                if ack_packet.ack_number == waiting_packets[0]["sequence_number"]:
                     waiting_packets.popleft()
                     ack_timeout_retries = 0
                     break
@@ -257,7 +261,8 @@ class TcpLiteSocket:
             self._shutdown()
         else:
             self._log(
-                f'Successfully sent packet {packet_to_send.sequence_number}/{packet_to_send.total_packets} and received ACK')
+                f'Successfully sent packets')
+    #         {packet_to_send.sequence_number}/{packet_to_send.total_packets} and received ACK
 
     def _shutdown(self):
         """Shuts down the socket"""
