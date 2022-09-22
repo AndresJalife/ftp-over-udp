@@ -59,9 +59,10 @@ class SendMethod:
 class TcpLiteSocket:
     CONNECT_RETIRES = 5
     ACK_RETRIES = 5
-    ACK_TIMEOUT = 10
+    ACK_TIMEOUT = 1
     PACKET_SIZE = 4096
-    DATA_PAYLOAD_SIZE = PACKET_SIZE - len(bytes(Packet()))
+    # DATA_PAYLOAD_SIZE = PACKET_SIZE - len(bytes(Packet()))
+    DATA_PAYLOAD_SIZE = 1
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
     GO_BACK_N = SendMethod.GO_BACK_N
     WINDOW_SIZE = 3
@@ -220,11 +221,13 @@ class TcpLiteSocket:
         ack_count = 0
         next_packet = 0
         waiting_packets = collections.deque([])
+        # print(len(packets_to_send))
         while ack_count < len(packets_to_send):
-            print("asd")
-            if len(waiting_packets) < TcpLiteSocket.WINDOW_SIZE and next_packet < len(packets_to_send):
+            # print("asd")
+            if len(waiting_packets) <= TcpLiteSocket.WINDOW_SIZE and next_packet < len(packets_to_send):
                 print(next_packet)
-                print(packets_to_send)
+                print(len(waiting_packets))
+                print()
                 packet_to_send = packets_to_send[next_packet]
                 packet_bytes = bytes(packet_to_send)
                 self._log(
@@ -243,17 +246,18 @@ class TcpLiteSocket:
                 if ack_timeout_retries >= TcpLiteSocket.ACK_RETRIES:
                     break
                 next_packet -= len(waiting_packets)
-                waiting_packets = []
+                waiting_packets = collections.deque([])
                 continue
 
             queue = self.ack_book[addr]
+
             while len(queue) > 0:
                 ack_packet = queue.popleft()
-                if not ack_packet:
-                    continue
+                # print(ack_packet.ack_number)
                 if ack_packet.ack_number == waiting_packets[0]["sequence_number"]:
                     waiting_packets.popleft()
                     ack_timeout_retries = 0
+                    ack_count += 1
                     break
 
         if ack_count == len(packets_to_send):
