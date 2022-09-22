@@ -59,7 +59,7 @@ class SendMethod:
 class TcpLiteSocket:
     CONNECT_RETIRES = 5
     ACK_RETRIES = 5
-    ACK_TIMEOUT = 2
+    ACK_TIMEOUT = 10
     PACKET_SIZE = 4096
     DATA_PAYLOAD_SIZE = PACKET_SIZE - len(bytes(Packet()))
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
@@ -220,6 +220,7 @@ class TcpLiteSocket:
         next_packet = 0
         waiting_packets = collections.deque([])
         while ack_count < len(packets_to_send):
+            print("asd")
             if len(waiting_packets) < TcpLiteSocket.WINDOW_SIZE and next_packet < len(packets_to_send):
                 print(next_packet)
                 print(packets_to_send)
@@ -235,7 +236,7 @@ class TcpLiteSocket:
             #     #     break
 
             if waiting_packets[0]["start_time"] + TcpLiteSocket.ACK_TIMEOUT < time.time():
-                print("asd")
+                print("timeout")
                 # resend packets
                 ack_timeout_retries += 1
                 if ack_timeout_retries >= TcpLiteSocket.ACK_RETRIES:
