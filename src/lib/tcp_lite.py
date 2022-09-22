@@ -213,7 +213,7 @@ class TcpLiteSocket:
         self.is_ready = True
         self.socket.sendto(bytes(packet), addr)
 
-    def _send_go_back_n(self, packets_to_send, addr, wait_for_ack):
+    def _send_go_back_n(self, packets_to_send, addr):
         success = False
         self.is_ready = True
         ack_timeout_retries = 0
