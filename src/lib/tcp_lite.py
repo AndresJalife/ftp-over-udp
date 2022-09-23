@@ -221,13 +221,8 @@ class TcpLiteSocket:
         ack_count = 0
         next_packet = 0
         waiting_packets = collections.deque([])
-        # print(len(packets_to_send))
         while ack_count < len(packets_to_send):
-            # print("asd")
             if len(waiting_packets) <= TcpLiteSocket.WINDOW_SIZE and next_packet < len(packets_to_send):
-                print(next_packet)
-                print(len(waiting_packets))
-                print()
                 packet_to_send = packets_to_send[next_packet]
                 packet_bytes = bytes(packet_to_send)
                 self._log(
@@ -235,9 +230,6 @@ class TcpLiteSocket:
                 self.socket.sendto(packet_bytes, addr)
                 next_packet += 1
                 waiting_packets.append({"sequence_number": packet_to_send.sequence_number, "start_time": time.time()})
-            #     # if not wait_for_ack:
-            #     #     success = True
-            #     #     break
 
             if waiting_packets[0]["start_time"] + TcpLiteSocket.ACK_TIMEOUT < time.time():
                 print("timeout")
