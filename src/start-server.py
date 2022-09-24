@@ -19,5 +19,20 @@ def main(verbose, quiet, host, port, storage):
             string = sock.receive().decode('ASCII')
             print(f'Received {string}')
 
+#     Comienza a escuchar
+#     Se fija si los mensajes entrantes son upload, download o listar
+#     Si es download
+#        se lee el file name
+#        si no existe manda mensaje de error
+#        si existe, lo envía
+
+#     Si es upload
+#        le llega el archivo
+#        con el nombre al principio
+#        arma el archivo (junta payload con nombre) y lo guarda
+
+#     Si es listar
+#        devuelve
+#
 if __name__ == '__main__':
     main()
