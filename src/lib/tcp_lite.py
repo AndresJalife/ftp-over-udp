@@ -246,7 +246,7 @@ class TcpLiteSocket:
         next_packet = 0
         waiting_packets = collections.deque([])
         while ack_count < len(packets_to_send):
-            next_packet, waiting_packets = self._send_burst(addr, next_packet, waiting_packets, packets_to_send)
+            next_packet, waiting_packets = self._send_burst_go_back_n(addr, next_packet, waiting_packets, packets_to_send)
             if waiting_packets[0]["start_time"] + TcpLiteSocket.ACK_TIMEOUT < time.time():
                 print("timeout")
                 ack_timeout_retries += 1
@@ -255,7 +255,7 @@ class TcpLiteSocket:
                 next_packet -= len(waiting_packets)
                 waiting_packets = collections.deque([])
                 continue
-            ack_timeout_retries, ack_count, waiting_packets = self._check_for_acks(addr, waiting_packets, ack_timeout_retries, ack_count)
+            ack_timeout_retries, ack_count, waiting_packets = self._check_for_acks_go_back_n(addr, waiting_packets, ack_timeout_retries, ack_count)
 
         if ack_count == len(packets_to_send):
             success = True
