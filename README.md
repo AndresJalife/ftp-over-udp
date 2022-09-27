@@ -8,11 +8,24 @@ paquetes grandes se dropean mas facil elegimos paquetes chico 4096
 
 ### DOWNLOAD PROTOCOL  
 
-+-----------------+  
-| METHOD - 1 byte |  
-+-----------------+  
-|    FILE NAME    |  
-+-----------------+  
+Sends:  
 
-METHOD: Has a value of 0  
++-----------+  
+|   METHOD  |  
++-----------+  
+| FILE NAME |  
++-----------+  
+
+METHOD: 1 byte. Has a value of 0  
 FILE NAME: Name of the file that wants to be downloaded  
+
+Recieves:  
+
++-----------+  
+|   OK   |  
++-----------+  
+| DATA CHUNK |  
++-----------+  
+
+OK: 1 byte. Flag indicating if the file can be downloaded  
+DATA CHUNK: The file. If there was an error it contains the error message  
