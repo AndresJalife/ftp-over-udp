@@ -22,8 +22,11 @@ def main(verbose, quiet, host, port, storage):
             sock.send(byte)
             print('Read')
         elif msg[0] == Protocol.UPLOAD_METHOD:
-            file = open("copia" + msg[1:msg.index("/")], 'x')
-            file.write(msg[msg.index("/") + 1:])
+            try:
+                file = open(storage + '/' + msg[1:msg.index("/")], 'x')
+                file.write(msg[msg.index("/") + 1:])
+            except:
+                print("No se pudo crear el archivo")
         else:
             sock.send(Protocol.DOWNLOAD_ERROR.encode('ASCII') + ('File Not Found').encode('ASCII'))
             print('Error')

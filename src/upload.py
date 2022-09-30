@@ -8,7 +8,7 @@ import random
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
 @click.option('-H', '--host', default=1, help='service IP address')
 @click.option('-p', '--port', default=1, help='service port')
-@click.option('-s', '--src', default=1, help='source file path')
+@click.option('-s', '--src', default="", help='source file path')
 @click.option('-n', '--name', default="", help='file name')
 
 def main(verbose, quiet, host, port, src, name):
@@ -17,8 +17,8 @@ def main(verbose, quiet, host, port, src, name):
     if not socket.connect():
         return
     try:
-        f = open(name, 'r')
-        print(name)
+        f = open(src + "/" + name, 'r')
+        print(src + "/" + name)
         msg = (Protocol.UPLOAD_METHOD + name + "/" + f.read()).encode('ASCII')
         socket.send(msg)
         f.close()
