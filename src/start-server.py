@@ -12,14 +12,8 @@ from lib.protocol import Protocol
 
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
-    server = TcpLiteServer(('127.0.0.1', 10563))
+    server = TcpLiteServer(('127.0.0.1', 10563), ack_type=TcpLiteServer.GO_BACK_N)
     for sock in server.listen():
-        msg = None
-        # for i in range(10):
-        #     # sock.send((string + random.choice('abcdefghijklpqrtsxyz')).encode('ASCII'))
-        #     string = sock.receive().decode('ASCII')
-        #     print(f'Received {string}')
-        #     sock.send(('OK').encode('ASCII'))
         msg = sock.receive().decode('ASCII')
         if msg[0] == Protocol.DOWNLOAD_METHOD:
             file = open(storage + '/' + msg[1:], 'rb')

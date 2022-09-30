@@ -59,12 +59,12 @@ class SendMethod:
 class TcpLiteSocket:
     CONNECT_RETIRES = 5
     ACK_RETRIES = 5
-    ACK_TIMEOUT = 1
-    PACKET_SIZE = 4096
+    ACK_TIMEOUT = 2
+    PACKET_SIZE = 8192 * 2
     DATA_PAYLOAD_SIZE = PACKET_SIZE - len(bytes(Packet()))
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
     GO_BACK_N = SendMethod.GO_BACK_N
-    WINDOW_SIZE = 3
+    WINDOW_SIZE = 10
 
     def __init__(self, addr, ack_type=STOP_AND_WAIT):
         self.server_addr = addr
@@ -113,6 +113,7 @@ class TcpLiteSocket:
             if not queue:
                 continue
             return queue.popleft()
+        print("Timeout S&W")
         return None
 
     def _get_packet_from(self, addr, timeout=0):
@@ -170,7 +171,7 @@ class TcpLiteSocket:
     def send_to(self, addr, bytes_to_send):
         """Sends a message using the specified ack algorithm"""
 
-        self._log(f'Sending {len(bytes_to_send)} bytes "{bytes_to_send.decode("ASCII")}"')
+        self._log(f'Sending {len(bytes_to_send)} bytes')
         total_packets = int(math.ceil(len(bytes_to_send) / TcpLiteSocket.DATA_PAYLOAD_SIZE))
         packets = []
         for i in range(0, len(bytes_to_send), TcpLiteSocket.DATA_PAYLOAD_SIZE):
@@ -248,7 +249,7 @@ class TcpLiteSocket:
         while ack_count < len(packets_to_send):
             next_packet, waiting_packets = self._send_burst_go_back_n(addr, next_packet, waiting_packets, packets_to_send)
             if waiting_packets[0]["start_time"] + TcpLiteSocket.ACK_TIMEOUT < time.time():
-                print("timeout")
+                print("Timeout GBN")
                 ack_timeout_retries += 1
                 if ack_timeout_retries >= TcpLiteSocket.ACK_RETRIES:
                     break
