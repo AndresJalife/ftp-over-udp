@@ -1,5 +1,6 @@
 import click
 from lib.tcp_lite import TcpLiteClient
+from lib.protocol import Protocol
 import random
 
 @click.command()
@@ -8,18 +9,22 @@ import random
 @click.option('-H', '--host', default=1, help='service IP address')
 @click.option('-p', '--port', default=1, help='service port')
 @click.option('-s', '--src', default=1, help='source file path')
-@click.option('-n', '--name', default=1, help='file name')
+@click.option('-n', '--name', default="", help='file name')
+
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
     socket = TcpLiteClient(('127.0.0.1', 10563), ack_type=TcpLiteClient.GO_BACK_N)
     if not socket.connect():
         return
-    while True:
-        string = None
-        for i in range(10):
-            string = socket.receive().decode('ascii')
-            print(f'Received {string}')
-            socket.send((string + random.choice('ABCDEFGHIJKLPQRSTXYZ')).encode('ASCII'))
+    try:
+        f = open(name, 'r')
+        print(name)
+        msg = (Protocol.UPLOAD_METHOD + name + "/" + f.read()).encode('ASCII')
+        socket.send(msg)
+        f.close()
+    except:
+        print("No se pudo abrir el archivo")
+    #socket.shutdown()
 
 if __name__ == '__main__':
     main()
