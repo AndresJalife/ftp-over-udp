@@ -16,7 +16,7 @@ def main(verbose, quiet, host, port, dst, name):
     socket = TcpLiteClient(('127.0.0.1', 10563), ack_type=TcpLiteClient.GO_BACK_N)
     if not socket.connect():
         return
-    msg = Protocol.DOWNLOAD_METHOD.encode('ASCII') + (name).encode('ASCII')
+    msg = Protocol.DOWNLOAD_METHOD.encode('ASCII') + name.encode('ASCII')
     socket.send(msg)
     msg = socket.receive().decode('ASCII')
     print('OK:', msg)
@@ -28,6 +28,7 @@ def main(verbose, quiet, host, port, dst, name):
         print('OK')
     elif msg == Protocol.DOWNLOAD_ERROR:
         print('ERROR:', msg[1:])
+    socket.shutdown()
 
 if __name__ == '__main__':
     main()
