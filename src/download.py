@@ -15,25 +15,22 @@ initial_config = DefaultConfiguration()
 
 def main(verbose, quiet, host, port, dst, name):
     """Comando para descargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.STOP_AND_WAIT)
+    socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.GO_BACK_N)
     if not socket.connect():
         return
-    msg = Protocol.DOWNLOAD_METHOD.encode('ASCII') + (name).encode('ASCII')
+    msg = Protocol.DOWNLOAD_METHOD.encode('ASCII') + name.encode('ASCII')
     socket.send(msg)
     msg = socket.receive().decode('ASCII')
     print('OK:', msg)
     if msg == Protocol.DOWNLOAD_OK:
-        file = open(dst + '/' + 'copy_' + name, 'w')
-        byte = socket.receive().decode('ASCII')
+        file = open(dst + '/' + 'copy_' + name, 'wb')
+        byte = socket.receive()
         file.write(byte)
         file.close()
         print('OK')
     elif msg == Protocol.DOWNLOAD_ERROR:
         print('ERROR:', msg[1:])
-
-
-
-    # click.echo(f"Hello {name}!")
+    socket.shutdown()
 
 if __name__ == '__main__':
     main()

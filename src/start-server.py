@@ -18,9 +18,8 @@ initial_config = DefaultConfiguration()
 
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
-    server = TcpLiteServer((port, host))
+    server = TcpLiteServer((port, host), ack_type=TcpLiteServer.GO_BACK_N)
     for sock in server.listen():
-        msg = None
         msg = sock.receive().decode('ASCII')
         if msg[0] == Protocol.DOWNLOAD_METHOD:
             file = open(storage + '/' + msg[1:], 'rb')
