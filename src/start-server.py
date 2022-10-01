@@ -1,25 +1,30 @@
+from cgi import print_form
+from distutils.command.config import config
+from importlib.resources import read_binary
 import click
 import random
 from lib.tcp_lite import TcpLiteServer
 from lib.protocol import Protocol
 
+def read_port():
+    config_file = open('config.txt','r')
+    port = config_file.readline().split('=')[1]
+    config_file.close()
+    return port
+
+
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
 @click.option('-H', '--host', default=1, help='service IP address')
-@click.option('-p', '--port', default=1, help='service port')
+@click.option('-p', '--port', default=read_port, help='service port')
 @click.option('-s', '--storage', default='files', help='storage dir path')
 
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
-    server = TcpLiteServer(('127.0.0.1', 10563))
+    server = TcpLiteServer((port, 10563))
     for sock in server.listen():
         msg = None
-        # for i in range(10):
-        #     # sock.send((string + random.choice('abcdefghijklpqrtsxyz')).encode('ASCII'))
-        #     string = sock.receive().decode('ASCII')
-        #     print(f'Received {string}')
-        #     sock.send(('OK').encode('ASCII'))
         msg = sock.receive().decode('ASCII')
         if msg[0] == Protocol.DOWNLOAD_METHOD:
             file = open(storage + '/' + msg[1:], 'rb')
@@ -33,3 +38,4 @@ def main(verbose, quiet, host, port, storage):
 
 if __name__ == '__main__':
     main()
+
