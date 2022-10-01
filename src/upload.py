@@ -3,6 +3,8 @@ from lib.tcp_lite import TcpLiteClient
 from lib.protocol import Protocol
 import random
 
+NAME_MAX_LENGTH = 20
+
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
@@ -17,14 +19,17 @@ def main(verbose, quiet, host, port, src, name):
     if not socket.connect():
         return
     try:
-        f = open(src + "/" + name, 'r')
+        f = open(src + "/" + name, 'rb')
         print(src + "/" + name)
-        msg = (Protocol.UPLOAD_METHOD + name + "/" + f.read()).encode('ASCII')
+        for i in range(0, NAME_MAX_LENGTH - len(name)):
+            name = name + "0"
+        msg = (Protocol.UPLOAD_METHOD.encode('utf-8') + name.encode('utf-8') + f.read())
         socket.send(msg)
         f.close()
     except:
         print("No se pudo abrir el archivo")
     #socket.shutdown()
+
 
 if __name__ == '__main__':
     main()
