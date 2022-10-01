@@ -7,11 +7,15 @@ from lib.tcp_lite import TcpLiteServer
 from lib.protocol import Protocol
 
 def read_port():
+    """Read the config file and get the port"""
     config_file = open('config.txt','r')
-    port = config_file.readline().split('=')[1]
-    config_file.close()
+    lines = config_file.readlines()
+    for line in lines:
+        port_line = line.split('=')
+        if port_line[0] == 'port':
+            port = port_line[1]
+    config_file.close() 
     return port
-
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
