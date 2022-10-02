@@ -15,7 +15,7 @@ NAME_MAX_LENGTH = 20
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
 @click.option('-H', '--host', default=initial_config.host, help='service IP address')
 @click.option('-p', '--port', default=initial_config.port, help='service port')
-@click.option('-s', '--storage', default='files', help='storage dir path')
+@click.option('-s', '--storage', default=initial_config.storage, help='storage dir path')
 
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""

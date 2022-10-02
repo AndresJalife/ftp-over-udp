@@ -8,6 +8,8 @@ class DefaultConfiguration:
             if split_line[0] == 'port':
                 self.port = split_line[1].rstrip()
             elif split_line[0] == 'host':
-                self.host = int(split_line[1])     
+                self.host = int(split_line[1])
+            elif split_line[0] == 'storage':
+                self.storage = split_line[1].rstrip()     
 
         config_file.close()
