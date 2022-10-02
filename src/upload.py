@@ -7,6 +7,7 @@ from lib.configuration import DefaultConfiguration
 initial_config = DefaultConfiguration()
 
 NAME_MAX_LENGTH = 20
+from lib.ftp_protocol import FTP_file_message
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
@@ -15,6 +16,7 @@ NAME_MAX_LENGTH = 20
 @click.option('-p', '--port', default=initial_config.port, help='service port')
 @click.option('-s', '--src', default="", help='source file path')
 @click.option('-n', '--name', default="", help='file name')
+
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
     socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.GO_BACK_N)
@@ -22,16 +24,19 @@ def main(verbose, quiet, host, port, src, name):
         return
     try:
         f = open(src + "/" + name, 'rb')
-        print(src + "/" + name)
-        for i in range(0, NAME_MAX_LENGTH - len(name)):
-            name = name + "0"
-        msg = (Protocol.UPLOAD_METHOD.encode('utf-8') + name.encode('utf-8') + f.read())
+        FTP_f_m = FTP_file_message(name, Protocol.UPLOAD_METHOD, f.read(), "")
+        msg = FTP_f_m.encode()
         socket.send(msg)
         f.close()
+        byte = socket.receive().decode('ASCII')
+        if byte == Protocol.UPLOAD_OK:
+            print("The file {} has been uploaded".format(name))
+        else:
+            print("The file {} could not be uploaded".format(name))
     except:
-        print("No se pudo abrir el archivo")
-    #socket.shutdown()
+        print("There was a error with the file")
 
+    #socket.shutdown()
 
 if __name__ == '__main__':
     main()

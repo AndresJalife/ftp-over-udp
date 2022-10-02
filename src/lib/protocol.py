@@ -3,3 +3,4 @@ class Protocol:
     UPLOAD_METHOD = '\1'
     DOWNLOAD_OK = '\0'
     DOWNLOAD_ERROR = '\1'
+    UPLOAD_OK = '\0'
