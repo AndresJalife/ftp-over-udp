@@ -8,6 +8,8 @@ from lib.configuration import DefaultConfiguration
 
 initial_config = DefaultConfiguration()
 
+NAME_MAX_LENGTH = 20
+
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
@@ -35,16 +37,30 @@ def _close_server(server):
     print('The server has been closed')
 
 def _receive_msg(sock, storage):
-        msg = sock.receive().decode('ASCII')
-        if msg[0] == Protocol.DOWNLOAD_METHOD:
-            file = open(storage + '/' + msg[1:], 'rb')
-            sock.send(Protocol.DOWNLOAD_OK.encode('ASCII'))
-            byte = file.read()
-            sock.send(byte)
-            print('Read')
-        else:
-            sock.send(Protocol.DOWNLOAD_ERROR.encode('ASCII') + ('File Not Found').encode('ASCII'))
-            print('Error')
+    msg = sock.receive().decode('ASCII')
+    if msg[0] == Protocol.DOWNLOAD_METHOD:
+        file = open(storage + '/' + msg[1:], 'rb')
+        sock.send(Protocol.DOWNLOAD_OK.encode('ASCII'))
+        byte = file.read()
+        sock.send(byte)
+        print('Read')
+    elif msg[0] == Protocol.UPLOAD_METHOD:
+        try:
+            name = ""
+            for i in range(1, NAME_MAX_LENGTH + 1):
+                name = name + chr(msg[i])
+            for i in range(len(name) - 1, -1, -1):
+                if name[i] != "0":
+                    break
+                name = name[:len(name) - 1]
+            file = open(storage + '/' + name, 'wb')
+            file.write(msg[NAME_MAX_LENGTH + 1:])
+        except:
+            print("No se pudo crear el archivo")
+    else:
+        sock.send(Protocol.DOWNLOAD_ERROR.encode('ASCII') + ('File Not Found').encode('ASCII'))
+        print('Error')
+
 
 if __name__ == '__main__':
     main()
