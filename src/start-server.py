@@ -5,7 +5,6 @@ from lib.ftp_protocol import FTP_file_message
 
 FTP_TYPE_DOWNLOAD = 0
 FTP_TYPE_UPLOAD = 1
-NAME_MAX_LENGTH = 20
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
@@ -33,7 +32,7 @@ def main(verbose, quiet, host, port, storage):
                 file = open(storage + '/' + FTP_f_m.file_name, 'wb')
                 file.write(FTP_f_m.payload)
                 sock.send(Protocol.UPLOAD_OK.encode('ASCII'))
-
+                print("Uploaded: {}".format(FTP_f_m.file_name))
             except:
                 print("There was a error with the file")
         else:
