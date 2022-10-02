@@ -3,8 +3,6 @@ from lib.tcp_lite import TcpLiteClient
 from lib.protocol import Protocol
 from lib.ftp_protocol import FTP_file_message
 
-NAME_MAX_LENGTH = 20
-
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
@@ -36,12 +34,6 @@ def main(verbose, quiet, host, port, src, name):
         print("There was a error with the file")
 
     #socket.shutdown()
-
-
-#     Se conecta al servidor con ftp_lite
-#     Se carga el archivo q hay que subir
-#     Se lo pasa al ftp_lite
-#     Ver si fue exitoso o falló
 
 if __name__ == '__main__':
     main()
