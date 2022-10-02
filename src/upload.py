@@ -1,7 +1,7 @@
 import click
 from lib.tcp_lite import TcpLiteClient
 from lib.protocol import Protocol
-from lib.ftp_protocol import FTP_message, FTP_file_message
+from lib.ftp_protocol import FTP_file_message
 
 NAME_MAX_LENGTH = 20
 
@@ -22,23 +22,19 @@ def main(verbose, quiet, host, port, src, name):
     if not socket.connect():
         return
     try:
-        # f = open(src + "/" + name, 'rb')
-        # print(src + "/" + name)
-        # for i in range(0, NAME_MAX_LENGTH - len(name)):
-        #     name = name + "0"
-        # msg = (Protocol.UPLOAD_METHOD.encode('utf-8') + name.encode('utf-8') + f.read())
-        # socket.send(msg)
-        # f.close()
-
         f = open(src + "/" + name, 'rb')
         FTP_f_m = FTP_file_message(name, Protocol.UPLOAD_METHOD, f.read(), "")
         msg = FTP_f_m.encode()
         socket.send(msg)
         f.close()
+        byte = socket.receive().decode('ASCII')
+        if byte == Protocol.UPLOAD_OK:
+            print("The file {} has been uploaded".format(name))
+        else:
+            print("The file {} could not be uploaded".format(name))
 
-    except Exception as e:
-        print(e)
-        print("No se pudo abrir el archivo")
+    except:
+        print("There was a error with the file")
     #socket.shutdown()
 
 
