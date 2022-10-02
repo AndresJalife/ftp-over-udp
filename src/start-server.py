@@ -1,8 +1,7 @@
-from cgi import print_form
 from distutils.command.config import config
 from importlib.resources import read_binary
+from threading import Thread
 import click
-import random
 from lib.tcp_lite import TcpLiteServer
 from lib.protocol import Protocol
 from lib.configuration import DefaultConfiguration
@@ -19,7 +18,23 @@ initial_config = DefaultConfiguration()
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
     server = TcpLiteServer((port, host), ack_type=TcpLiteServer.GO_BACK_N)
+    close_thread = Thread(target=_close_server, args=[server],daemon=True)
+    close_thread.start()
+
     for sock in server.listen():
+        receive_thread = Thread(target=_receive_msg, args=(sock,storage),daemon=True)
+        receive_thread.start()
+
+
+def _close_server(server):
+    msg = input("Write quit to close the server\n")
+    while True:
+        if(msg=='quit'):
+            server.shutdown()
+            break
+    print('The server has been closed')
+
+def _receive_msg(sock, storage):
         msg = sock.receive().decode('ASCII')
         if msg[0] == Protocol.DOWNLOAD_METHOD:
             file = open(storage + '/' + msg[1:], 'rb')
