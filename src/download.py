@@ -11,6 +11,7 @@ from lib.protocol import Protocol
 @click.option('-d', '--dst', default='copy', help='dst destination file path')
 @click.option('-n', '--name', default='', help='file name')
 
+
 def main(verbose, quiet, host, port, dst, name):
     """Comando para descargar un archivo mediante custom-ftp"""
     socket = TcpLiteClient(('127.0.0.1', 10563), ack_type=TcpLiteClient.GO_BACK_N)
