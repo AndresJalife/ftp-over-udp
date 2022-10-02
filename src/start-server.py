@@ -3,7 +3,6 @@ from importlib.resources import read_binary
 from threading import Thread
 import click
 from lib.tcp_lite import TcpLiteServer
-from lib.protocol import Protocol
 from lib.configuration import DefaultConfiguration
 
 initial_config = DefaultConfiguration()
@@ -42,26 +41,24 @@ def _close_server(server):
 
 def _receive_msg(sock, storage):
     msg = sock.receive()
-    if msg[0] == FTP_TYPE_DOWNLOAD:
-        msg = msg.decode('ASCII')
-        file = open(storage + '/' + msg[1:], 'rb')
-        sock.send(Protocol.DOWNLOAD_OK.encode('ASCII'))
-        byte = file.read()
-        sock.send(byte)
-        print('Read')
-    elif msg[0] == FTP_TYPE_UPLOAD:
+    msg = FTP_file_message.decode(msg)
+    if msg.type == FTP_TYPE_DOWNLOAD:
+        with open(storage + '/' + msg.file_name, 'rb') as file:
+            bytes_to_send = file.read()
+            sock.send(FTP_file_message(msg.file_name, FTP_TYPE_DOWNLOAD, bytes_to_send, False).encode())
+            print('File sent')
+    elif msg.type == FTP_TYPE_UPLOAD:
         try:
-            FTP_f_m = FTP_file_message("", Protocol.UPLOAD_METHOD, "", "")
-            FTP_f_m.decode(msg)
-            file = open(storage + '/' + FTP_f_m.file_name, 'wb')
-            file.write(FTP_f_m.payload)
-            sock.send(Protocol.UPLOAD_OK.encode('ASCII'))
-            print("Uploaded: {}".format(FTP_f_m.file_name))
+            with open(storage + '/' + msg.file_name, 'wb') as file:
+                file.write(msg.payload)
+                sock.send(FTP_file_message("", FTP_TYPE_UPLOAD, bytes(), False).encode())
+                print("Uploaded: {}".format(msg.file_name))
         except:
+            sock.send(FTP_file_message("", FTP_TYPE_UPLOAD, bytes(), True).encode())
             print("There was a error with the file")
     else:
-        sock.send(Protocol.DOWNLOAD_ERROR.encode('ASCII') + ('File Not Found').encode('ASCII'))
-        print('Error')
+        sock.send(FTP_file_message("", FTP_TYPE_UPLOAD, "Method Not Found".encode("ASCII"), True).encode())
+        print('Error - Method not found.')
 
 
 if __name__ == '__main__':

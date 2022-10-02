@@ -1,6 +1,5 @@
 import click
 from lib.tcp_lite import TcpLiteClient
-from lib.protocol import Protocol
 import random
 from lib.configuration import DefaultConfiguration
 
@@ -23,17 +22,16 @@ def main(verbose, quiet, host, port, src, name):
     if not socket.connect():
         return
     try:
-        f = open(src + "/" + name, 'rb')
-        FTP_f_m = FTP_file_message(name, Protocol.UPLOAD_METHOD, f.read(), "")
-        msg = FTP_f_m.encode()
-        socket.send(msg)
-        f.close()
-        byte = socket.receive().decode('ASCII')
-        if byte == Protocol.UPLOAD_OK:
-            print("The file {} has been uploaded".format(name))
-        else:
-            print("The file {} could not be uploaded".format(name))
-    except:
+        with open(src + "/" + name, 'rb') as f:
+            msg = FTP_file_message(name, FTP_file_message.FTP_TYPE_UPLOAD, f.read(), False).encode()
+            socket.send(msg)
+            msg = FTP_file_message.decode(socket.receive())
+            if msg.error == False:
+                print("The file {} has been uploaded".format(name))
+            else:
+                print("The file {} could not be uploaded".format(name))
+    except e:
+        print(e)
         print("There was a error with the file")
 
     #socket.shutdown()
