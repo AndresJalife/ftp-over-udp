@@ -30,11 +30,10 @@ def main(verbose, quiet, host, port, src, name):
                 print("The file {} has been uploaded".format(name))
             else:
                 print("The file {} could not be uploaded".format(name))
-    except e:
-        print(e)
+    except:
         print("There was a error with the file")
 
-    #socket.shutdown()
+    socket.shutdown()
 
 if __name__ == '__main__':
     main()

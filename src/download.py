@@ -26,7 +26,6 @@ def main(verbose, quiet, host, port, dst, name):
     if msg.type == FTP_file_message.FTP_TYPE_DOWNLOAD and not msg.error:
         try:
             file = open(dst + '/' + 'copy_' + name, 'wb')
-            # byte = socket.receive()
             file.write(msg.payload)
             file.close()
             print('OK')
