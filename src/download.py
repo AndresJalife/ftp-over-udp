@@ -1,8 +1,7 @@
 import click
 from lib.tcp_lite import TcpLiteClient
-from lib.protocol import Protocol
 from lib.configuration import DefaultConfiguration
-from lib.ftp_protocol import FTP_message
+from lib.ftp_protocol import FTP_file_message
 
 initial_config = DefaultConfiguration()
 
@@ -20,19 +19,20 @@ def main(verbose, quiet, host, port, dst, name):
     socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.GO_BACK_N)
     if not socket.connect():
         return
-    msg = FTP_message(Protocol.DOWNLOAD_METHOD, name, '')
+    msg = FTP_file_message(name, FTP_file_message.FTP_TYPE_DOWNLOAD, bytes(), False)
     socket.send(msg.encode())
-    msg = socket.receive().decode('ASCII')
-    if msg == Protocol.DOWNLOAD_OK:
+    msg = socket.receive()
+    msg = FTP_file_message.decode(msg)
+    if msg.type == FTP_file_message.FTP_TYPE_DOWNLOAD and not msg.error:
         try:
             file = open(dst + '/' + 'copy_' + name, 'wb')
-            byte = socket.receive()
-            file.write(byte)
+            # byte = socket.receive()
+            file.write(msg.payload)
             file.close()
             print('OK')
         except:
             print('ERROR: Could not write file copy_' + name)
-    elif msg == Protocol.DOWNLOAD_ERROR:
+    elif msg.error:
         print('ERROR:', msg[1:])
     socket.shutdown()
 
