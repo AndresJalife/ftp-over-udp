@@ -148,6 +148,7 @@ class TcpLiteSocket:
         if packet.sync:
             response = Packet(ack_number=1, sync=True)
         if packet.shutdown:
+            print(f'Sent shutdown ACK to {addr}')
             response = Packet(ack_number=1, shutdown=True)
         self._send_without_ack(response, addr)
 
@@ -161,7 +162,7 @@ class TcpLiteSocket:
             return
 
         if packet.shutdown and not self.is_closed:
-            print('Received shutdown packet')
+            print(f'Received shutdown packet from {addr}')
             self._on_shutdown_received(addr)
             return
 
@@ -172,7 +173,7 @@ class TcpLiteSocket:
 
         if addr not in self.address_book:
             self._log(f'Received packet from unknown client {addr}')
-            return
+        #    return
 
         self.address_book[addr].append(packet)
         self._log(f'Received packet from client {addr}')
@@ -280,11 +281,12 @@ class TcpLiteSocket:
         print(f'Shutting down for {addr}.')
         self.is_closed = True
         for _ in range(TcpLiteSocket.ACK_RETRIES):
-            print('Sending shutdown packet')
-            self.send_queue.append(([Packet(shutdown=True)], addr))
+            print(f'Sending shutdown packet to {addr}')
+            self._send_without_ack(Packet(shutdown=True), addr)
             ack_packet = self._get_ack_packet_from(addr, timeout=TcpLiteSocket.ACK_TIMEOUT)
             if ack_packet:
                 break
+            self.send_queue.append(([Packet(shutdown=True, ack_number=1)], addr))
         print(f'Connection with {addr} closed.')
 
     def _drop_socket(self):
@@ -296,8 +298,8 @@ class TcpLiteSocket:
 
     def _log(self, *args):
         """Log the args to STDOUT"""
-        if self.verbosity_level > 0:
-            return print(*args)
+        #if self.verbosity_level > 0:
+        return print(*args)
 
 
 class TcpLiteServer(TcpLiteSocket):
@@ -326,7 +328,8 @@ class TcpLiteServer(TcpLiteSocket):
         self._drop_socket()
 
     def _on_shutdown_received(self, addr):
-        del self.address_book[addr]
+        if addr in self.address_book:
+            del self.address_book[addr]
         print(f"Connection closed with {addr}")
 
 
