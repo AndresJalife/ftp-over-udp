@@ -1,6 +1,7 @@
 import socket
 import struct
 import math
+import sys
 import time
 import collections
 from threading import Thread
@@ -326,6 +327,9 @@ class TcpLiteServer(TcpLiteSocket):
         for addr in self.address_book.keys():
             self._shutdown(addr)
         self._drop_socket()
+
+    def __getitem__(self): 
+        return self.shutdown()
 
     def _on_shutdown_received(self, addr):
         if addr in self.address_book:

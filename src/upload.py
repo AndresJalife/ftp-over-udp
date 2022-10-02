@@ -1,22 +1,25 @@
 import click
 from lib.tcp_lite import TcpLiteClient
 from lib.protocol import Protocol
+import random
+from lib.configuration import DefaultConfiguration
+
+initial_config = DefaultConfiguration()
+
+NAME_MAX_LENGTH = 20
 from lib.ftp_protocol import FTP_file_message
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
-@click.option('-H', '--host', default=1, help='service IP address')
-@click.option('-p', '--port', default=1, help='service port')
+@click.option('-H', '--host', default=initial_config.host, help='service IP address')
+@click.option('-p', '--port', default=initial_config.port, help='service port')
 @click.option('-s', '--src', default="", help='source file path')
 @click.option('-n', '--name', default="", help='file name')
 
-# IP = "127.0.0.1"
-# PORT = 10563
-
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient(('127.0.0.1', 10563), ack_type=TcpLiteClient.GO_BACK_N)
+    socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.GO_BACK_N)
     if not socket.connect():
         return
     try:

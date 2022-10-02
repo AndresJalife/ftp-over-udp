@@ -1,14 +1,16 @@
 import click
 from lib.tcp_lite import TcpLiteClient
 from lib.protocol import Protocol
+from lib.configuration import DefaultConfiguration
 from lib.ftp_protocol import FTP_message
 
+initial_config = DefaultConfiguration()
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
 @click.option('-q', '--quiet', default=1, help='decrease output verbosity')
-@click.option('-H', '--host', default=10563, help='service IP address')
-@click.option('-p', '--port', default='127.0.0.1', help='service port')
+@click.option('-H', '--host', default=initial_config.host, help='service IP address')
+@click.option('-p', '--port', default=initial_config.port, help='service port')
 @click.option('-d', '--dst', default='copy', help='dst destination file path')
 @click.option('-n', '--name', default='', help='file name')
 
