@@ -1,5 +1,4 @@
 import click
-import random
 from lib.tcp_lite import TcpLiteServer
 from lib.protocol import Protocol
 
@@ -41,6 +40,21 @@ def main(verbose, quiet, host, port, storage):
             sock.send(Protocol.DOWNLOAD_ERROR.encode('ASCII') + ('File Not Found').encode('ASCII'))
             print('Error')
 
+#     Comienza a escuchar
+#     Se fija si los mensajes entrantes son upload, download o listar
+#     Si es download
+#        se lee el file name
+#        si no existe manda mensaje de error
+#        si existe, lo envía
+
+#     Si es upload
+#        le llega el archivo
+#        con el nombre al principio
+#        arma el archivo (junta payload con nombre) y lo guarda
+
+#     Si es listar
+#        devuelve
+#
 
 if __name__ == '__main__':
     main()

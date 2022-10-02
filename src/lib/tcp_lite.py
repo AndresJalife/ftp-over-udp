@@ -10,14 +10,14 @@ class Packet:
     """TcpLite Protocol packet"""
     HEADER_FORMAT = '??IIIII'
 
-    def __init__(self, sync=False, data=bytes(), sequence_number=0, index_number=0, ack_number=0, total_packets=0, dead=False):
+    def __init__(self, sync=False, data=bytes(), sequence_number=0, index_number=0, ack_number=0, total_packets=0, shutdown=False):
         self.sync = sync
         self.data = data
         self.sequence_number = sequence_number
         self.index_number = index_number
         self.ack_number = ack_number
         self.total_packets = total_packets
-        self.dead = dead
+        self.shutdown = shutdown
 
     def is_ack(self):
         """Return if the pack is an ACK packet"""
@@ -28,7 +28,7 @@ class Packet:
         return struct.pack(
             Packet.HEADER_FORMAT,
             self.sync,
-            self.dead,
+            self.shutdown,
             self.sequence_number,
             self.index_number,
             self.ack_number,
@@ -43,7 +43,7 @@ class Packet:
         header = struct.unpack(Packet.HEADER_FORMAT, packet_bytes[:header_size])
         return Packet(
             sync=header[0],
-            dead=header[1],
+            shutdown=header[1],
             sequence_number=header[2],
             index_number=header[3],
             ack_number=header[4],
@@ -60,7 +60,7 @@ class TcpLiteSocket:
     CONNECT_RETIRES = 5
     ACK_RETRIES = 5
     ACK_TIMEOUT = 2
-    PACKET_SIZE = 8192 * 2
+    PACKET_SIZE = 4096 * 2
     DATA_PAYLOAD_SIZE = PACKET_SIZE - len(bytes(Packet()))
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
     GO_BACK_N = SendMethod.GO_BACK_N
@@ -78,14 +78,14 @@ class TcpLiteSocket:
         self.send_queue = collections.deque()
         self.sending_thread = Thread(target=self._send_loop, daemon=True)
         self.receive_thread = Thread(target=self._receive_loop, daemon=True)
-        self.should_die = False
+        self.is_closed = False
         self.is_ready = False
         self.sending_thread.start()
         self.receive_thread.start()
 
     def _send_loop(self):
         """Send messages in the background"""
-        while not self.should_die:
+        while not self.is_closed:
             if not self.send_queue:
                 continue
             packets_to_send, addr = self.send_queue.popleft()
@@ -97,7 +97,7 @@ class TcpLiteSocket:
 
     def _receive_loop(self):
         """Main loop that receives packets in the background"""
-        while not self.should_die:
+        while not self.is_closed:
             if not self.is_ready:
                 continue
             data, receive_addr = self.socket.recvfrom(TcpLiteSocket.PACKET_SIZE)
@@ -113,7 +113,6 @@ class TcpLiteSocket:
             if not queue:
                 continue
             return queue.popleft()
-        print("Timeout S&W")
         return None
 
     def _get_packet_from(self, addr, timeout=0):
@@ -148,12 +147,22 @@ class TcpLiteSocket:
         response = Packet(ack_number=packet.sequence_number)
         if packet.sync:
             response = Packet(ack_number=1, sync=True)
+        if packet.shutdown:
+            response = Packet(ack_number=1, shutdown=True)
         self._send_without_ack(response, addr)
 
     def _queue_packet(self, packet, addr):
         """Queue a packet in the address book"""
+        if packet.shutdown and packet.is_ack():
+            print('Received ACK shutdown')
+
         if packet.is_ack():
             self.ack_book[addr].append(packet)
+            return
+
+        if packet.shutdown and not self.is_closed:
+            print('Received shutdown packet')
+            self._on_shutdown_received(addr)
             return
 
         if packet.sync:
@@ -206,7 +215,7 @@ class TcpLiteSocket:
                 break
         if not success:
             self._log('STOP_AND_WAIT: Failed to receive ACK, shutting down.')
-            #self._shutdown()
+            self._shutdown(addr)
         else:
             self._log(f'Successfully sent packet {packet_to_send.sequence_number}/{packet_to_send.total_packets} and received ACK')
 
@@ -262,14 +271,28 @@ class TcpLiteSocket:
             success = True
         if not success:
             self._log('GO_BACK_N: Failed to receive ACK, shutting down.')
-            self._shutdown()
+            self._shutdown(addr)
         else:
             self._log(f'Successfully sent packets')
 
-    def _shutdown(self):
+    def _shutdown(self, addr):
         """Shuts down the socket"""
-        self.should_die = True
-        self.socket.shutdown(socket.SHUT_RDWR)
+        print(f'Shutting down for {addr}.')
+        self.is_closed = True
+        for _ in range(TcpLiteSocket.ACK_RETRIES):
+            print('Sending shutdown packet')
+            self.send_queue.append(([Packet(shutdown=True)], addr))
+            ack_packet = self._get_ack_packet_from(addr, timeout=TcpLiteSocket.ACK_TIMEOUT)
+            if ack_packet:
+                break
+        print(f'Connection with {addr} closed.')
+
+    def _drop_socket(self):
+        self.is_closed = True
+
+    #@abstract_method
+    def _on_shutdown_received(self, addr):
+        pass
 
     def _log(self, *args):
         """Log the args to STDOUT"""
@@ -299,8 +322,12 @@ class TcpLiteServer(TcpLiteSocket):
     def shutdown(self):
         """Shutdown the server and signal all clients"""
         for addr in self.address_book.keys():
-            self.send_to(addr, bytes(Packet(dead=True)))
-        self._shutdown()
+            self._shutdown(addr)
+        self._drop_socket()
+
+    def _on_shutdown_received(self, addr):
+        del self.address_book[addr]
+        print(f"Connection closed with {addr}")
 
 
 class TcpLiteClient(TcpLiteSocket):
@@ -333,8 +360,13 @@ class TcpLiteClient(TcpLiteSocket):
 
     def shutdown(self):
         """Shutdowns the client and signals the server"""
-        self.send_to(self.server_addr, bytes(Packet(dead=True)))
-        self._shutdown()
+        self._shutdown(self.server_addr)
+        self._drop_socket()
+
+    def _on_shutdown_received(self, addr):
+        if addr == self.server_addr:
+            self._drop_socket()
+            print(f"Connection closed with {self.server_addr}")
 
 
 class TcpLiteConnection:
