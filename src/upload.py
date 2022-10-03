@@ -5,8 +5,7 @@ from lib.configuration import DefaultConfiguration
 
 initial_config = DefaultConfiguration()
 
-NAME_MAX_LENGTH = 20
-from lib.ftp_protocol import FTP_file_message
+from lib.ftp_protocol import FTPFileMessage
 
 @click.command()
 @click.option('-v', '--verbose', default=1, help='increase output verbosity')
@@ -18,14 +17,14 @@ from lib.ftp_protocol import FTP_file_message
 
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.GO_BACK_N)
+    socket = TcpLiteClient((port, host), verbosity=1 + verbose - quiet)
     if not socket.connect():
         return
     try:
         with open(src + "/" + name, 'rb') as f:
-            msg = FTP_file_message(name, FTP_file_message.FTP_TYPE_UPLOAD, f.read(), False).encode()
+            msg = FTPFileMessage(name, FTPFileMessage.FTP_TYPE_UPLOAD, f.read(), False).encode()
             socket.send(msg)
-            msg = FTP_file_message.decode(socket.receive())
+            msg = FTPFileMessage.decode(socket.receive())
             if msg.error == False:
                 print("The file {} has been uploaded".format(name))
             else:

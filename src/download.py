@@ -1,7 +1,7 @@
 import click
 from lib.tcp_lite import TcpLiteClient
 from lib.configuration import DefaultConfiguration
-from lib.ftp_protocol import FTP_file_message
+from lib.ftp_protocol import FTPFileMessage
 
 initial_config = DefaultConfiguration()
 
@@ -16,14 +16,14 @@ initial_config = DefaultConfiguration()
 
 def main(verbose, quiet, host, port, dst, name):
     """Comando para descargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.GO_BACK_N)
+    socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.STOP_AND_WAIT)
     if not socket.connect():
         return
-    msg = FTP_file_message(name, FTP_file_message.FTP_TYPE_DOWNLOAD, bytes(), False)
+    msg = FTPFileMessage(name, FTPFileMessage.FTP_TYPE_DOWNLOAD, bytes(), False)
     socket.send(msg.encode())
     msg = socket.receive()
-    msg = FTP_file_message.decode(msg)
-    if msg.type == FTP_file_message.FTP_TYPE_DOWNLOAD and not msg.error:
+    msg = FTPFileMessage.decode(msg)
+    if msg.type == FTPFileMessage.FTP_TYPE_DOWNLOAD and not msg.error:
         try:
             file = open(dst + '/' + 'copy_' + name, 'wb')
             file.write(msg.payload)

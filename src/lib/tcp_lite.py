@@ -1,7 +1,7 @@
 import socket
 import struct
 import math
-import sys
+from multiprocessing.pool import ThreadPool
 import time
 import collections
 from threading import Thread
@@ -66,11 +66,12 @@ class TcpLiteSocket:
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
     GO_BACK_N = SendMethod.GO_BACK_N
     WINDOW_SIZE = 10
+    MAX_CONCURRENT_CLIENTS = 4
 
-    def __init__(self, addr, ack_type=STOP_AND_WAIT):
+    def __init__(self, addr, ack_type=STOP_AND_WAIT, verbosity=1):
         self.server_addr = addr
         self.send_method = ack_type
-        self.verbosity_level = 0
+        self.verbosity_level = verbosity
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.settimeout(None)
         self.address_book = collections.defaultdict(collections.deque)
@@ -83,6 +84,7 @@ class TcpLiteSocket:
         self.is_ready = False
         self.sending_thread.start()
         self.receive_thread.start()
+        self.pool = ThreadPool(TcpLiteSocket.MAX_CONCURRENT_CLIENTS)
 
     def _send_loop(self):
         """Send messages in the background"""
@@ -90,11 +92,15 @@ class TcpLiteSocket:
             if not self.send_queue:
                 continue
             packets_to_send, addr = self.send_queue.popleft()
-            if self.send_method == SendMethod.STOP_AND_WAIT:
-                for packet in packets_to_send:
-                    self._send_stop_and_wait(packet, addr)
-            elif self.send_method == SendMethod.GO_BACK_N:
-                self._send_go_back_n(packets_to_send, addr)
+
+            def do_send():
+                if self.send_method == SendMethod.STOP_AND_WAIT:
+                    for packet in packets_to_send:
+                        self._send_stop_and_wait(packet, addr)
+                elif self.send_method == SendMethod.GO_BACK_N:
+                    self._send_go_back_n(packets_to_send, addr)
+            do_send()
+            #self.pool.apply(do_send)
 
     def _receive_loop(self):
         """Main loop that receives packets in the background"""
@@ -196,7 +202,8 @@ class TcpLiteSocket:
             )
             packets.append(packet_to_send)
         self._log(f'Queuing data to send to {addr}')
-        self.send_queue.append((packets, addr))
+        for i in range(len(packets)):
+            self.send_queue.append((packets, addr))
 
     def _send_stop_and_wait(self, packet_to_send, addr):
         """Sends a packet using the stop and wait algorithm"""
