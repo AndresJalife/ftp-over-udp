@@ -7,13 +7,13 @@ initial_config = DefaultConfiguration()
 
 
 @click.command()
-@click.option("-v", "--verbose", default=1, help="increase output verbosity")
-@click.option("-q", "--quiet", default=1, help="decrease output verbosity")
+@click.option("-v", "--verbose", default=initial_config.verbosity, help="increase output verbosity")
+@click.option("-q", "--quiet", default=1 - initial_config.verbosity, help="decrease output verbosity")
 @click.option("-H", "--host", default=initial_config.host, help="service IP address")
 @click.option("-p", "--port", default=initial_config.port, help="service port")
 def main(verbose, quiet, host, port):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((host, port), verbosity=1 + verbose - quiet)
+    socket = TcpLiteClient((host, port), verbosity=1 + verbose - quiet, ack_type=initial_config.send_type)
     if not socket.connect():
         return
 

@@ -7,15 +7,15 @@ initial_config = DefaultConfiguration()
 
 
 @click.command()
-@click.option("-v", "--verbose", default=1, help="increase output verbosity")
-@click.option("-q", "--quiet", default=1, help="decrease output verbosity")
+@click.option("-v", "--verbose", default=initial_config.verbosity, help="increase output verbosity")
+@click.option("-q", "--quiet", default=1 - initial_config.verbosity, help="decrease output verbosity")
 @click.option("-H", "--host", default=initial_config.host, help="service IP address")
 @click.option("-p", "--port", default=initial_config.port, help="service port")
 @click.option("-d", "--dst", default="copy", help="dst destination file path")
 @click.option("-n", "--name", default="", help="file name")
 def main(verbose, quiet, host, port, dst, name):
     """Comando para descargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((host, port), ack_type=TcpLiteClient.STOP_AND_WAIT)
+    socket = TcpLiteClient((host, port), verbosity=1 + verbose - quiet, ack_type=initial_config.send_type)
     if not socket.connect():
         return
     msg = FTPFileMessage(name, FTPFileMessage.FTP_TYPE_DOWNLOAD, bytes(), False)
