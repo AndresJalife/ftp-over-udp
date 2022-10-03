@@ -12,8 +12,8 @@ initial_config = DefaultConfiguration()
 
 
 @click.command()
-@click.option("-v", "--verbose", default=1, help="increase output verbosity")
-@click.option("-q", "--quiet", default=1, help="decrease output verbosity")
+@click.option("-v", "--verbose", default=initial_config.verbosity, help="increase output verbosity")
+@click.option("-q", "--quiet", default=1 - initial_config.verbosity, help="decrease output verbosity")
 @click.option("-H", "--host", default=initial_config.host, help="service IP address")
 @click.option("-p", "--port", default=initial_config.port, help="service port")
 @click.option(

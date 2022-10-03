@@ -10,5 +10,7 @@ class DefaultConfiguration:
                 self.host = int(split_line[1])
             elif split_line[0] == "storage":
                 self.storage = split_line[1].rstrip()
+            elif split_line[0] == "verbosity":
+                self.verbosity = int(split_line[1])
 
         config_file.close()
