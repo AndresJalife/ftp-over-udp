@@ -80,7 +80,6 @@ class TcpLiteSocket:
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
     GO_BACK_N = SendMethod.GO_BACK_N
     WINDOW_SIZE = 10
-    MAX_CONCURRENT_CLIENTS = 4
 
     def __init__(self, addr, ack_type=STOP_AND_WAIT, verbosity=1):
         self.server_addr = addr

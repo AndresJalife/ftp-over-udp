@@ -27,12 +27,12 @@ def main(verbose, quiet, host, port, src, name):
             ).encode()
             socket.send(msg)
             msg = FTPFileMessage.decode(socket.receive())
-            if msg.error == False:
+            if not msg.error:
                 print("The file {} has been uploaded".format(name))
             else:
                 print("The file {} could not be uploaded".format(name))
     except:
-        print("There was a error with the file")
+        print(f"There was a error with the file {src + '/' + name}")
 
     socket.shutdown()
 
