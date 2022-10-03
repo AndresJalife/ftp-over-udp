@@ -10,12 +10,15 @@ import sys
 
 initial_config = DefaultConfiguration()
 
+
 @click.command()
-@click.option('-v', '--verbose', default=1, help='increase output verbosity')
-@click.option('-q', '--quiet', default=1, help='decrease output verbosity')
-@click.option('-H', '--host', default=initial_config.host, help='service IP address')
-@click.option('-p', '--port', default=initial_config.port, help='service port')
-@click.option('-s', '--storage', default=initial_config.storage, help='storage dir path')
+@click.option("-v", "--verbose", default=1, help="increase output verbosity")
+@click.option("-q", "--quiet", default=1, help="decrease output verbosity")
+@click.option("-H", "--host", default=initial_config.host, help="service IP address")
+@click.option("-p", "--port", default=initial_config.port, help="service port")
+@click.option(
+    "-s", "--storage", default=initial_config.storage, help="storage dir path"
+)
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
     server = TcpLiteServer((port, host), verbosity=1 + verbose - quiet)
@@ -33,9 +36,9 @@ def _listen(server, storage):
 def _close_server(server):
     msg = input("Write quit to close the server\n")
     while True:
-        if msg == 'quit':
+        if msg == "quit":
             server.shutdown()
-            print('The server has been closed')
+            print("The server has been closed")
             sys.exit()
 
 
@@ -44,32 +47,59 @@ def _receive_msg(sock, storage):
     msg = FTPFileMessage.decode(msg)
     if msg.type == FTPFileMessage.FTP_TYPE_DOWNLOAD:
         try:
-            with open(storage + '/' + msg.file_name, 'rb') as file:
+            with open(storage + "/" + msg.file_name, "rb") as file:
                 bytes_to_send = file.read()
-                sock.send(FTPFileMessage(msg.file_name, FTPFileMessage.FTP_TYPE_DOWNLOAD, bytes_to_send, False).encode())
-                print('File sent')
+                sock.send(
+                    FTPFileMessage(
+                        msg.file_name,
+                        FTPFileMessage.FTP_TYPE_DOWNLOAD,
+                        bytes_to_send,
+                        False,
+                    ).encode()
+                )
+                print("File sent")
         except:
-            sock.send(FTPFileMessage("", FTPFileMessage.FTP_TYPE_UPLOAD, bytes(), True).encode())
+            sock.send(
+                FTPFileMessage(
+                    "", FTPFileMessage.FTP_TYPE_UPLOAD, bytes(), True
+                ).encode()
+            )
             print("File not found.")
     elif msg.type == FTPFileMessage.FTP_TYPE_UPLOAD:
         try:
-            with open(storage + '/' + msg.file_name, 'wb') as file:
+            with open(storage + "/" + msg.file_name, "wb") as file:
                 file.write(msg.payload)
-                sock.send(FTPFileMessage("", FTPFileMessage.FTP_TYPE_UPLOAD, bytes(), False).encode())
+                sock.send(
+                    FTPFileMessage(
+                        "", FTPFileMessage.FTP_TYPE_UPLOAD, bytes(), False
+                    ).encode()
+                )
                 print("Uploaded: {}".format(msg.file_name))
         except:
-            sock.send(FTPFileMessage("", FTPFileMessage.FTP_TYPE_UPLOAD, bytes(), True).encode())
+            sock.send(
+                FTPFileMessage(
+                    "", FTPFileMessage.FTP_TYPE_UPLOAD, bytes(), True
+                ).encode()
+            )
             print("There was a error with the file")
     elif msg.type == FTPFileMessage.FTP_TYPE_LIST:
         files = os.listdir(storage)
-        payload = (','.join(files)).encode('ASCII')
-        print(','.join(files))
-        sock.send(FTPFileMessage(type=FTPFileMessage.FTP_TYPE_LIST, payload=payload).encode())
+        payload = (",".join(files)).encode("ASCII")
+        print(",".join(files))
+        sock.send(
+            FTPFileMessage(type=FTPFileMessage.FTP_TYPE_LIST, payload=payload).encode()
+        )
     else:
-        sock.send(FTPFileMessage("", FTPFileMessage.FTP_TYPE_UPLOAD, "Method Not Found".encode("ASCII"), True).encode())
-        print('Error - Method not found.')
+        sock.send(
+            FTPFileMessage(
+                "",
+                FTPFileMessage.FTP_TYPE_UPLOAD,
+                "Method Not Found".encode("ASCII"),
+                True,
+            ).encode()
+        )
+        print("Error - Method not found.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
