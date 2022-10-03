@@ -11,7 +11,7 @@ initial_config = DefaultConfiguration()
 @click.option("-q", "--quiet", default=1 - initial_config.verbosity, help="decrease output verbosity")
 @click.option("-H", "--host", default=initial_config.host, help="service IP address")
 @click.option("-p", "--port", default=initial_config.port, help="service port")
-@click.option("-d", "--dst", default="", help="dst destination file path")
+@click.option("-d", "--dst", default="copy", help="dst destination file path")
 @click.option("-n", "--name", default="", help="file name")
 def main(verbose, quiet, host, port, dst, name):
     """Comando para descargar un archivo mediante custom-ftp"""
@@ -28,7 +28,8 @@ def main(verbose, quiet, host, port, dst, name):
             file.write(msg.payload)
             file.close()
             print("OK")
-        except:
+        except Exception as e:
+            print(e)
             print("ERROR: Could not write file copy_" + name)
     elif msg.error:
         print("ERROR:", msg[1:])

@@ -254,7 +254,6 @@ class TcpLiteSocket:
 
     def _send_without_ack(self, packet, addr):
         self.is_ready = True
-        print(addr)
         self.socket.sendto(bytes(packet), addr)
 
     def _send_burst_go_back_n(
