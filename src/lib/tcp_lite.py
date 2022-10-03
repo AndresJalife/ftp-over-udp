@@ -108,15 +108,17 @@ class TcpLiteSocket:
 
     def _send_multiple(self, packets_to_send, addr):
         if self.send_method == SendMethod.STOP_AND_WAIT:
-            for i, packet in enumerate(packets_to_send):
-                self._send_stop_and_wait(packet, addr)
+            i = 0
+            while i < len(packets_to_send) and addr in self.address_book:
+                self._send_stop_and_wait(packets_to_send[i], addr)
+                i += 1
         elif self.send_method == SendMethod.GO_BACK_N:
             self._send_go_back_n(packets_to_send, addr)
 
     @staticmethod
     def _do_concurrently(func, *args):
         # Deberiamos usar una threadpool
-        t = Thread(target=func, args=args)
+        t = Thread(target=func, args=args, daemon=True)
         t.start()
 
     def _receive_loop(self):
@@ -254,7 +256,6 @@ class TcpLiteSocket:
 
     def _send_without_ack(self, packet, addr):
         self.is_ready = True
-        print(addr)
         self.socket.sendto(bytes(packet), addr)
 
     def _send_burst_go_back_n(
@@ -301,7 +302,7 @@ class TcpLiteSocket:
         ack_count = 0
         next_packet = 0
         waiting_packets = collections.deque([])
-        while ack_count < len(packets_to_send):
+        while ack_count < len(packets_to_send) and addr in self.address_book:
             next_packet, waiting_packets = self._send_burst_go_back_n(
                 addr, next_packet, waiting_packets, packets_to_send
             )
@@ -326,7 +327,7 @@ class TcpLiteSocket:
 
         if ack_count == len(packets_to_send):
             success = True
-        if not success:
+        if not success and addr in self.address_book:
             self._log("GO_BACK_N: Failed to receive ACK, shutting down.")
             self._shutdown(addr)
         else:
@@ -335,7 +336,6 @@ class TcpLiteSocket:
     def _shutdown(self, addr):
         """Shuts down the socket"""
         self._log(f"Shutting down for {addr}.")
-        self.is_closed = True
         for _ in range(TcpLiteSocket.ACK_RETRIES):
             self._log(f"Sending shutdown packet to {addr}")
             self._send_without_ack(Packet(shutdown=True), addr)
@@ -381,6 +381,7 @@ class TcpLiteServer(TcpLiteSocket):
 
     def shutdown(self):
         """Shutdown the server and signal all clients"""
+        self.is_closed = True
         for addr in self.address_book.keys():
             self._shutdown(addr)
         self._drop_socket()
@@ -426,6 +427,7 @@ class TcpLiteClient(TcpLiteSocket):
 
     def shutdown(self):
         """Shutdowns the client and signals the server"""
+        self.is_closed = True
         self._shutdown(self.server_addr)
         self._drop_socket()
 
