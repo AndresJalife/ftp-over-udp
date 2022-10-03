@@ -74,7 +74,7 @@ class SendMethod:
 class TcpLiteSocket:
     CONNECT_RETIRES = 5
     ACK_RETRIES = 5
-    ACK_TIMEOUT = 2
+    ACK_TIMEOUT = 1
     PACKET_SIZE = 4096 * 2
     DATA_PAYLOAD_SIZE = PACKET_SIZE - len(bytes(Packet()))
     STOP_AND_WAIT = SendMethod.STOP_AND_WAIT
