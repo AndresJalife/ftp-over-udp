@@ -5,9 +5,9 @@ class DefaultConfiguration:
         for line in lines:
             split_line = line.split("=")
             if split_line[0] == "port":
-                self.port = split_line[1].rstrip()
+                self.port = int(split_line[1])
             elif split_line[0] == "host":
-                self.host = int(split_line[1])
+                self.host = split_line[1].rstrip()
             elif split_line[0] == "storage":
                 self.storage = split_line[1].rstrip()
             elif split_line[0] == "verbosity":

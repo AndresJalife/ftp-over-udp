@@ -15,7 +15,7 @@ initial_config = DefaultConfiguration()
 @click.option("-n", "--name", default="", help="file name")
 def main(verbose, quiet, host, port, dst, name):
     """Comando para descargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((port, host), ack_type=TcpLiteClient.STOP_AND_WAIT)
+    socket = TcpLiteClient((host, port), ack_type=TcpLiteClient.STOP_AND_WAIT)
     if not socket.connect():
         return
     msg = FTPFileMessage(name, FTPFileMessage.FTP_TYPE_DOWNLOAD, bytes(), False)

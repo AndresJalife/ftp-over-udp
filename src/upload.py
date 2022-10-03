@@ -17,7 +17,7 @@ from lib.ftp_protocol import FTPFileMessage
 @click.option("-n", "--name", default="", help="file name")
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((port, host), verbosity=1 + verbose - quiet)
+    socket = TcpLiteClient((host, port), verbosity=1 + verbose - quiet)
     if not socket.connect():
         return
     try:

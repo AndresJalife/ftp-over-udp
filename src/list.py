@@ -13,7 +13,7 @@ initial_config = DefaultConfiguration()
 @click.option("-p", "--port", default=initial_config.port, help="service port")
 def main(verbose, quiet, host, port):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((port, host), verbosity=1 + verbose - quiet)
+    socket = TcpLiteClient((host, port), verbosity=1 + verbose - quiet)
     if not socket.connect():
         return
 
