@@ -21,7 +21,7 @@ initial_config = DefaultConfiguration()
 )
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
-    server = TcpLiteServer((port, host), verbosity=1 + verbose - quiet)
+    server = TcpLiteServer((host, port), verbosity=1 + verbose - quiet)
     listen_thread = Thread(target=_listen, args=[server, storage], daemon=True)
     listen_thread.start()
     _close_server(server)
