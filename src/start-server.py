@@ -19,18 +19,18 @@ initial_config = DefaultConfiguration()
 def main(verbose, quiet, host, port, storage):
     """Comando para comenzar el servidor del custom-ftp"""
     server = TcpLiteServer((port, host), ack_type=TcpLiteServer.GO_BACK_N)
-    listen_thread = Thread(target=_listen, args=[server],daemon=True)
+    listen_thread = Thread(target=_listen, args=[server, storage],daemon=True)
     listen_thread.start()
     _close_server(server)
 
 
-def _listen(server):
+def _listen(server, storage):
     for sock in server.listen():
         receive_thread = Thread(target=_receive_msg, args=(sock,storage),daemon=True)
         receive_thread.start()
 
 def _close_server(server):
-    msg = input("Write quit to close the server\n")
+    msg = input("Write 'quit' to close the server\n")
     while True:
         if(msg=='quit'):
             server.shutdown()
