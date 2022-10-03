@@ -1,8 +1,8 @@
 import socket
 import struct
 import math
-from multiprocessing.pool import ThreadPool
 import time
+from abc import abstractmethod
 import collections
 from threading import Thread
 
@@ -98,7 +98,6 @@ class TcpLiteSocket:
         self.is_ready = False
         self.sending_thread.start()
         self.receive_thread.start()
-        self.pool = ThreadPool(TcpLiteSocket.MAX_CONCURRENT_CLIENTS)
 
     def _send_loop(self):
         """Send messages in the background"""
@@ -106,16 +105,20 @@ class TcpLiteSocket:
             if not self.send_queue:
                 continue
             packets_to_send, addr = self.send_queue.popleft()
+            self._do_concurrently(self._send_multiple, packets_to_send, addr)
 
-            def do_send():
-                if self.send_method == SendMethod.STOP_AND_WAIT:
-                    for packet in packets_to_send:
-                        self._send_stop_and_wait(packet, addr)
-                elif self.send_method == SendMethod.GO_BACK_N:
-                    self._send_go_back_n(packets_to_send, addr)
+    def _send_multiple(self, packets_to_send, addr):
+        if self.send_method == SendMethod.STOP_AND_WAIT:
+            for i, packet in enumerate(packets_to_send):
+                self._send_stop_and_wait(packet, addr)
+        elif self.send_method == SendMethod.GO_BACK_N:
+            self._send_go_back_n(packets_to_send, addr)
 
-            do_send()
-            # self.pool.apply(do_send)
+    @staticmethod
+    def _do_concurrently(func, *args):
+        # Deberiamos usar una threadpool
+        t = Thread(target=func, args=args)
+        t.start()
 
     def _receive_loop(self):
         """Main loop that receives packets in the background"""
@@ -170,21 +173,21 @@ class TcpLiteSocket:
         if packet.sync:
             response = Packet(ack_number=1, sync=True)
         if packet.shutdown:
-            print(f"Sent shutdown ACK to {addr}")
+            self._log(f"Sent shutdown ACK to {addr}")
             response = Packet(ack_number=1, shutdown=True)
         self._send_without_ack(response, addr)
 
     def _queue_packet(self, packet, addr):
         """Queue a packet in the address book"""
         if packet.shutdown and packet.is_ack():
-            print("Received ACK shutdown")
+            self._log("Received ACK shutdown")
 
         if packet.is_ack():
             self.ack_book[addr].append(packet)
             return
 
         if packet.shutdown and not self.is_closed:
-            print(f"Received shutdown packet from {addr}")
+            self._log(f"Received shutdown packet from {addr}")
             self._on_shutdown_received(addr)
             return
 
@@ -219,8 +222,7 @@ class TcpLiteSocket:
             )
             packets.append(packet_to_send)
         self._log(f"Queuing data to send to {addr}")
-        for i in range(len(packets)):
-            self.send_queue.append((packets, addr))
+        self.send_queue.append((packets, addr))
 
     def _send_stop_and_wait(self, packet_to_send, addr):
         """Sends a packet using the stop and wait algorithm"""
@@ -248,7 +250,7 @@ class TcpLiteSocket:
             self._shutdown(addr)
         else:
             self._log(
-                f"Successfully sent packet {packet_to_send.sequence_number}/{packet_to_send.total_packets} and received ACK"
+                f"Successfully sent packet {packet_to_send.index_number + 1}/{packet_to_send.total_packets} and received ACK"
             )
 
     def _send_without_ack(self, packet, addr):
@@ -307,7 +309,7 @@ class TcpLiteSocket:
                 waiting_packets[0]["start_time"] + TcpLiteSocket.ACK_TIMEOUT
                 < time.time()
             ):
-                print("Timeout GBN")
+                self._log("Timeout GBN")
                 ack_timeout_retries += 1
                 if ack_timeout_retries >= TcpLiteSocket.ACK_RETRIES:
                     break
@@ -332,10 +334,10 @@ class TcpLiteSocket:
 
     def _shutdown(self, addr):
         """Shuts down the socket"""
-        print(f"Shutting down for {addr}.")
+        self._log(f"Shutting down for {addr}.")
         self.is_closed = True
         for _ in range(TcpLiteSocket.ACK_RETRIES):
-            print(f"Sending shutdown packet to {addr}")
+            self._log(f"Sending shutdown packet to {addr}")
             self._send_without_ack(Packet(shutdown=True), addr)
             ack_packet = self._get_ack_packet_from(
                 addr, timeout=TcpLiteSocket.ACK_TIMEOUT
@@ -343,19 +345,19 @@ class TcpLiteSocket:
             if ack_packet:
                 break
             self.send_queue.append(([Packet(shutdown=True, ack_number=1)], addr))
-        print(f"Connection with {addr} closed.")
+        self._log(f"Connection with {addr} closed.", 0)
 
     def _drop_socket(self):
         self.is_closed = True
 
-    # @abstract_method
+    @abstractmethod
     def _on_shutdown_received(self, addr):
         pass
 
-    def _log(self, *args):
+    def _log(self, s, level=1):
         """Log the args to STDOUT"""
-        # if self.verbosity_level > 0:
-        return print(*args)
+        if self.verbosity_level >= level:
+            return print(s)
 
 
 class TcpLiteServer(TcpLiteSocket):
@@ -371,9 +373,9 @@ class TcpLiteServer(TcpLiteSocket):
                 continue
 
             packet, addr = self.connection_queue.popleft()
-            self._log(f"Received connection request from {addr}")
+            self._log(f"Received connection request from {addr}", 0)
             lite_socket = TcpLiteConnection(parent=self, addr=addr)
-            self._log(f"Client {addr} successfully connected")
+            self._log(f"Client {addr} successfully connected", 0)
 
             yield lite_socket
 
@@ -389,7 +391,7 @@ class TcpLiteServer(TcpLiteSocket):
     def _on_shutdown_received(self, addr):
         if addr in self.address_book:
             del self.address_book[addr]
-        print(f"Connection closed with {addr}")
+        self._log(f"Connection closed with {addr}", 0)
 
 
 class TcpLiteClient(TcpLiteSocket):
@@ -412,10 +414,10 @@ class TcpLiteClient(TcpLiteSocket):
                 continue
 
             if packet.ack_number == 1 and packet.sync:
-                self._log(f"Established connection to '{self.server_addr}'")
+                self._log(f"Established connection to '{self.server_addr}'", 0)
                 return True
 
-        self._log(f"Failed to connect to '{self.server_addr}'")
+        self._log(f"Failed to connect to '{self.server_addr}'", 0)
         return False
 
     def receive(self):
@@ -430,7 +432,7 @@ class TcpLiteClient(TcpLiteSocket):
     def _on_shutdown_received(self, addr):
         if addr == self.server_addr:
             self._drop_socket()
-            print(f"Connection closed with {self.server_addr}")
+            self._log(f"Connection closed with {self.server_addr}", 0)
 
 
 class TcpLiteConnection:

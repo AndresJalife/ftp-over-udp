@@ -60,9 +60,7 @@ def _receive_msg(sock, storage):
                 print("File sent")
         except:
             sock.send(
-                FTPFileMessage(
-                    "", FTPFileMessage.FTP_TYPE_UPLOAD, bytes(), True
-                ).encode()
+                FTPFileMessage(type=FTPFileMessage.FTP_TYPE_UPLOAD, error=True).encode()
             )
             print("File not found.")
     elif msg.type == FTPFileMessage.FTP_TYPE_UPLOAD:
