@@ -9,15 +9,15 @@ from lib.ftp_protocol import FTPFileMessage
 
 
 @click.command()
-@click.option("-v", "--verbose", default=1, help="increase output verbosity")
-@click.option("-q", "--quiet", default=1, help="decrease output verbosity")
+@click.option("-v", "--verbose", default=initial_config.verbosity, help="increase output verbosity")
+@click.option("-q", "--quiet", default=1 - initial_config.verbosity, help="decrease output verbosity")
 @click.option("-H", "--host", default=initial_config.host, help="service IP address")
 @click.option("-p", "--port", default=initial_config.port, help="service port")
 @click.option("-s", "--src", default="", help="source file path")
 @click.option("-n", "--name", default="", help="file name")
 def main(verbose, quiet, host, port, src, name):
     """Comando para cargar un archivo mediante custom-ftp"""
-    socket = TcpLiteClient((host, port), verbosity=1 + verbose - quiet)
+    socket = TcpLiteClient((host, port), verbosity=1 + verbose - quiet, ack_type=initial_config.send_type)
     if not socket.connect():
         return
     try:
