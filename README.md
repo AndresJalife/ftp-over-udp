@@ -40,4 +40,71 @@ El puerto al que se conectara el cliente. Por defecto, se utiliza el puerto espe
 
 ### DOWNLOAD  
 
-El comando download descarga 
+El comando download descarga un archivo del servidor al cliente. A la descarga realizada se le agrega el prefijo 'copy_'. 
+
+    python3 src/download.py -n file_name  
+
+Options:  
+
+    -v, --verbose INTEGER  
+
+Aumenta la verbosidad del cliente TCP. Hay mas logs para explicar en detalle el proceso.  
+
+    -q, --quiet INTEGER  
+
+Disminuye la verbosidad del cliente TCP. Hay menos logs para explicar en detalle el proceso.  
+
+    -H, --host TEXT  
+
+La direccion IP a la que se conectara el cliente. Por defecto, se utiliza la direccion especificada en config.txt.  
+
+    -p, --port INTEGER  
+
+El puerto al que se conectara el cliente. Por defecto, se utiliza el puerto especificado en config.txt.  
+
+    -d, --dst TEXT  
+
+La carpeta de destino a donde se copiara el archivo. Por defecto, se copia en la carpeta 'copy'.  
+
+    -n, --name TEXT  
+
+Nombre del archivo a descargar. Unico parametro obligatorio del comando.  
+
+    --help  
+
+### UPLOAD  
+
+El comando upload carga un archivo del cliente al servidor.  
+
+    python3 src/upload.py -n file_name  
+
+Options:  
+
+    -v, --verbose INTEGER  
+
+Aumenta la verbosidad del cliente TCP. Hay mas logs para explicar en detalle el proceso.  
+
+    -q, --quiet INTEGER  
+
+Disminuye la verbosidad del cliente TCP. Hay menos logs para explicar en detalle el proceso.  
+
+    -H, --host TEXT  
+
+La direccion IP a la que se conectara el cliente. Por defecto, se utiliza la direccion especificada en config.txt.  
+
+    -p, --port INTEGER  
+
+El puerto al que se conectara el cliente. Por defecto, se utiliza el puerto especificado en config.txt.  
+
+    -s, --src TEXT  
+
+La carpeta de origen de donde se carga el archivo. Por defecto, se utiliza la raiz.  
+
+    -n, --name TEXT  
+
+Nombre del archivo a descargar. Unico parametro obligatorio del comando.  
+
+    --help  
+
+### config.txt  
+
