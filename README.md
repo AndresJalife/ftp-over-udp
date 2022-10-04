@@ -13,7 +13,7 @@ A continuacion, se encuentran los comandos explicados en detalle:
 
 ### LIST  
 
-'''
-python3 src/list.py 
-'''
+
+    python3 src/list.py 
+
 
