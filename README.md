@@ -13,7 +13,22 @@ A continuacion, se encuentran los comandos explicados en detalle:
 
 ### LIST  
 
+El comando list lista todos los archivos que estan disponibles en el servidor y pueden ser descargados por el cliente.
+Se ejecuta con el siguiente comando:  
 
     python3 src/list.py 
 
+Options:
+    -v, --verbose INTEGER  
+Aumenta la verbosidad del cliente TCP. Hay mas logs para explicar en detalle el proceso.  
+    -q, --quiet INTEGER  
+Disminuye la verbosidad del cliente TCP. Hay menos logs para explicar en detalle el proceso.  
+    -H, --host TEXT  
+La direccion IP a la que se conectara el cliente. Por defecto, se utiliza la direccion especificada en config.txt.  
+    -p, --port INTEGER  
+El puerto al que se conectara el cliente. Por defecto, se utiliza el puerto especificado en config.txt.  
+    --help   
 
+### DOWNLOAD  
+
+El comando download descarga 
