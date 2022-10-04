@@ -27,12 +27,12 @@ def main(verbose, quiet, host, port, dst, name):
             file = open(dst + "/" + "copy_" + name, "wb")
             file.write(msg.payload)
             file.close()
-            print("OK")
+            print("File downloaded")
         except Exception as e:
             print(e)
             print("ERROR: Could not write file copy_" + name)
     elif msg.error:
-        print("ERROR:", msg[1:])
+        print("ERROR: File not found")
     socket.shutdown()
 
 
