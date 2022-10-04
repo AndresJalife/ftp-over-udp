@@ -1,31 +1,19 @@
 # ftp-over-udp
 
-usando click
+ftp-over-udp es un proyecto que realiza download y upload de archivos con una arquitectura cliente-servidor.  
+Por medio de diferentes comandos, el cliente puede subir, descargar un archivo o ver cuales son los archivos que se encuentran disponibles en el servidor.  
 
-https://click.palletsprojects.com/en/8.1.x/
+El envio de paquetes se realiza sobre una version simplificada de TCP que llamamos TcpLite. Esta garantiza que los archivos lleguen ordenados y en su totalidad, lo que lo hace un protocolo fiable. Sin embargo, no garantiza control de congestion ni de flow, como si lo hace TCP.  
 
-paquetes grandes se dropean mas facil elegimos paquetes chico 4096  
+Utilizamos la libreria de click para facilitar el uso de parametros en los comandos.  
+https://click.palletsprojects.com/en/8.1.x/  
 
-### DOWNLOAD PROTOCOL  
 
-Sends:  
+A continuacion, se encuentran los comandos explicados en detalle:   
 
-+-----------+  
-|   METHOD  |  
-+-----------+  
-| FILE NAME |  
-+-----------+  
+### LIST  
 
-METHOD: 1 byte. Has a value of 0  
-FILE NAME: Name of the file that wants to be downloaded  
+'''
+python3 src/list.py 
+'''
 
-Recieves:  
-
-+-----------+  
-|   OK   |  
-+-----------+  
-| DATA CHUNK |  
-+-----------+  
-
-OK: 1 byte. Flag indicating if the file can be downloaded  
-DATA CHUNK: The file. If there was an error it contains the error message  
